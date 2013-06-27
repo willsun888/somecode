@@ -1,4 +1,4 @@
-algorithm_code
+some_code
 ==============
 
-some algorithm code
+store some code in my coding test 
