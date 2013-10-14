@@ -22,7 +22,7 @@ public class ProducerAndConsumerDemo{
                     try{  
                         while(myList.size() == MAX)...{  
                             System.out.println("warning: it's full!");  
-                            myList.wait();  
+                            myList.wait();  //wait()方法在睡眠的时候会放开锁,这个跟sleep不一样，它睡眠时不会放开锁
                         }  
                         Object o = new Object();  
                         if(myList.add(o)){  
@@ -44,7 +44,7 @@ public class ProducerAndConsumerDemo{
                     try{  
                         while(myList.size() == 0){  
                             System.out.println("warning: it's empty!");  
-                            myList.wait();  
+                            myList.wait();    //wait()方法在睡眠的时候会放开锁
                         }  
                         Object o = myList.removeLast();  
                         System.out.println("Consumer: " + o);  
