@@ -7,12 +7,14 @@
 //
 
 #include <iostream>
+#include "tr1_test.h"
 
-int main(int argc, const char * argv[])
-{
+using namespace std;
 
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
-}
+//int main(int argc, const char * argv[])
+//{
+//    tr1_function_test();
+//    
+//    return 0;
+//}
 
