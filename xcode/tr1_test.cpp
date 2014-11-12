@@ -8,8 +8,8 @@
 
 #include "tr1_test.h"
 #include <iostream>
-#include <tr1/memory>
-#include <tr1/functional>
+//#include <tr1/memory>
+//#include <tr1/functional>
 
 using namespace std;
 
@@ -29,8 +29,8 @@ public:
 
 void tr1_function_test()
 {
-    tr1::function<void(void)> SayHelloFunc;
-    Person person;
-    SayHelloFunc = tr1::bind(&Person::SayHello,&person);  //取地址符号不能少
-    SayHelloFunc();
+//    tr1::function<void(void)> SayHelloFunc;
+//    Person person;
+//    SayHelloFunc = tr1::bind(&Person::SayHello,&person);  //取地址符号不能少
+//    SayHelloFunc();
 }

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F40227AA19F3787400B0A288 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F40227A919F3787400B0A288 /* main.cpp */; };
 		F40227D019F38BAF00B0A288 /* tr1_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F40227CE19F38BAF00B0A288 /* tr1_test.cpp */; };
 		F40227D519F38C9A00B0A288 /* boost_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F40227D319F38C9A00B0A288 /* boost_test.cpp */; };
 /* End PBXBuildFile section */
@@ -26,7 +25,6 @@
 
 /* Begin PBXFileReference section */
 		F40227A619F3787400B0A288 /* xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = xcode; sourceTree = BUILT_PRODUCTS_DIR; };
-		F40227A919F3787400B0A288 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = xcode/main.cpp; sourceTree = "<group>"; };
 		F40227CE19F38BAF00B0A288 /* tr1_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tr1_test.cpp; sourceTree = "<group>"; };
 		F40227CF19F38BAF00B0A288 /* tr1_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tr1_test.h; sourceTree = "<group>"; };
 		F40227D319F38C9A00B0A288 /* boost_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = boost_test.cpp; sourceTree = "<group>"; };
@@ -47,7 +45,6 @@
 		F402279D19F3787400B0A288 = {
 			isa = PBXGroup;
 			children = (
-				F40227D219F38C6900B0A288 /* amain */,
 				F40227CD19F3832D00B0A288 /* tr1_test */,
 				F40227A819F3787400B0A288 /* boost_test */,
 				F40227A719F3787400B0A288 /* Products */,
@@ -80,14 +77,6 @@
 				F40227CF19F38BAF00B0A288 /* tr1_test.h */,
 			);
 			name = tr1_test;
-			sourceTree = "<group>";
-		};
-		F40227D219F38C6900B0A288 /* amain */ = {
-			isa = PBXGroup;
-			children = (
-				F40227A919F3787400B0A288 /* main.cpp */,
-			);
-			name = amain;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,7 +131,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F40227D519F38C9A00B0A288 /* boost_test.cpp in Sources */,
-				F40227AA19F3787400B0A288 /* main.cpp in Sources */,
 				F40227D019F38BAF00B0A288 /* tr1_test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
