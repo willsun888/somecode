@@ -2,7 +2,6 @@
  * 学习sds
  * 重点函数：
  * 1. sdsMakeRoomFor：可以学到redis扩展字符串空间的分配策略
- * 2. redis测试代码的编写，有借鉴之处。测试代码写在.c中，利用宏控制测试代码块
  */
 #ifndef __SDS_H
 #define __SDS_H
