@@ -56,6 +56,8 @@
  * prevented: a hash table is still allowed to grow if the ratio between
  * the number of elements and the buckets > dict_force_resize_ratio. */
 static int dict_can_resize = 1;
+
+/* 如果已使用空间是空闲空间5倍，hashtable会忽略dict_can_resize而强制扩展空间 */
 static unsigned int dict_force_resize_ratio = 5;
 
 /* -------------------------- private prototypes ---------------------------- */
@@ -208,7 +210,7 @@ int dictExpand(dict *d, unsigned long size)
 
     /* the size is invalid if it is smaller than the number of
      * elements already inside the hash table */
-    if (dictIsRehashing(d) || d->ht[0].used > size)
+    if ((d) || d->ht[0].used > size)
         return DICT_ERR;
 
     /* Rehashing to the same table size is not useful. */
@@ -351,8 +353,7 @@ dictEntry *dictAddRaw(dict *d, void *key)
 
     if (dictIsRehashing(d)) _dictRehashStep(d);
 
-    /* Get the index of the new element, or -1 if
-     * the element already exists. */
+    // 获取新元素应该插入的位置index，如果返回-1表示元素已经存在
     if ((index = _dictKeyIndex(d, key)) == -1)
         return NULL;
 
@@ -925,7 +926,7 @@ static int _dictExpandIfNeeded(dict *d)
     /* Incremental rehashing already in progress. Return. */
     if (dictIsRehashing(d)) return DICT_OK;
 
-    /* If the hash table is empty expand it to the initial size. */
+    /* 如果hashtable为空，初始化空间为4 */
     if (d->ht[0].size == 0) return dictExpand(d, DICT_HT_INITIAL_SIZE);
 
     /* If we reached the 1:1 ratio, and we are allowed to resize the hash

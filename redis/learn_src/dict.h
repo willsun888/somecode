@@ -1,5 +1,8 @@
 /**
  * 学习Hash Tables的实现
+ * 重点：
+ * 1. dictEntry中value的设计
+ * 2. dictType的设计，利用函数指针来做面向接口实现的设计
  */
 
 #include <stdint.h>
@@ -14,9 +17,13 @@
 #define DICT_NOTUSED(V) ((void) V)
 
 typedef struct dictEntry {
-    void *key;
+    // key-value的key部分
+    void *key; 
+    // key-value的value部分
     union {
-        void *val;     // 指针在64bit和32bit系统不同长度 ???
+        // 代码是64bit的，所以指针是64位。这个指针为了支持value是指针类型
+        void *val;
+        // 下面三个为支持value是整数或者浮点数
         uint64_t u64;
         int64_t s64;
         double d;
@@ -24,10 +31,18 @@ typedef struct dictEntry {
     struct dictEntry *next;
 } dictEntry;
 
+/**
+ * hash中涉及到的操作函数，都定义成函数指针，让使用者自己实现具体细节
+ * 一些数据都定义成void*，可以支持丰富的数据类型
+ */
 typedef struct dictType {
+    //key的hash值（元素所在位置）的生成
     unsigned int (*hashFunction)(const void *key);
+    //key的拷贝
     void *(*keyDup)(void *privdata, const void *key);
+    //value的拷贝
     void *(*valDup)(void *privdata, const void *obj);
+    //两个key的比较
     int (*keyCompare)(void *privdata, const void *key1, const void *key2);
     void (*keyDestructor)(void *privdata, void *key);
     void (*valDestructor)(void *privdata, void *obj);
