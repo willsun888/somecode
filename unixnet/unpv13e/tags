@@ -1,0 +1,17 @@
+AC_CHECK_MEMBER	configure.in	/^AC_CHECK_MEMBER([struct msghdr.msg_control],$/
+AC_DEFUN	aclocal.m4	/^AC_DEFUN(AC_CHECK_FUNC_PROTO,$/
+AC_MSG_RESULT	configure.in	/^AC_MSG_RESULT($ac_cv_ipv6)$/
+AC_REVISION	configure.in	/^AC_REVISION($Revision: 1.13 $)$/
+Mconfig.guess	config.guess	/^	int main (int argc, char *argv[]) {$/
+Mconfigure	configure	/^main ()$/
+buf	configure	/^struct buf { int x; };$/
+e	configure	/^static char *e (p, i)$/
+etsockopt	README	/^  systems still have the pointer argument to [sg]e/
+f	configure	/^static char *f (char * (*g) (char **, int), char */
+guess	config.guess	/^GNU config.guess ($timestamp)$/
+if	config.log	/^                if (fd < 0) exit(1);$/
+run	config.guess	/^If the version you run ($0) is already up to date,/
+s1	configure	/^struct s1 {int (*f) (int a);};$/
+s2	configure	/^struct s2 {int (*f) (double a);};$/
+symbol	config.log	/^ld: symbol(s) not found for architecture x86_64$/
+x86_64h	config.log	/^Processor type: x86_64h (Intel x86-64h Haswell)$/
