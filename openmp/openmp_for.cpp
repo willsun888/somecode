@@ -12,7 +12,7 @@ void test1()
 	int n = 100;
 
 	/**
-	 this way is ok
+	 this way is ok, too
 	 #pragma omp parallel for shared(iterations, n) 
 	 for {}
 	 */
