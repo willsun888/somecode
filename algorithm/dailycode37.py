@@ -8,6 +8,5 @@ def get_subset(lst):
 
 if __name__ == "__main__":
     lst = [1, 2, 3, 4]
-    res = get_subset(lst)
-    print(res)
-    print(len(res))
+    print(get_subset(lst))
+
