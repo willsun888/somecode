@@ -1,8 +1,6 @@
 import sys
 
 def get_ways(n, m):
-    if n == 0 or m == 0:
-        return 0
     if n == 1 or m == 1:
         return 1
     return get_ways(n-1, m) + get_ways(n, m-1)
@@ -31,8 +29,19 @@ def _get_ways2(n, m, arr):
     return t1+t2
 
 def get_ways2(n, m):
-    arr = [[0 for _ in range(m+1)] for _ in range(n+1)]
-    return _get_ways2(n, m, arr)
+    arr = [[0 for _ in range(m)] for _ in range(n)]
+
+    for i in range(0, n):
+        arr[i][0] = 1
+
+    for j in range(0, m):
+        arr[0][j] = 1
+
+    for i in range(1, n):
+        for j in range(1, m):
+            arr[i][j] = arr[i-1][j]+arr[i][j-1]
+
+    return arr[-1][-1]
 
 if __name__ == "__main__":
     num = get_ways2(int(sys.argv[1]), int(sys.argv[2]))
