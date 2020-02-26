@@ -1,0 +1,59 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    # required by proto_library
+    name = "com_google_protobuf",
+    strip_prefix = "protobuf-master",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/master.zip"],
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+http_archive(
+    name = "com_google_grpc",
+    sha256 = "11ac793c562143d52fd440f6549588712badc79211cdc8c509b183cb69bddad8",
+    strip_prefix = "grpc-1.22.0",
+    urls = ["https://github.com/grpc/grpc/archive/v1.22.0.tar.gz"],
+)
+
+http_archive(
+    name = "com_github_grpc_grpc",
+    sha256 = "11ac793c562143d52fd440f6549588712badc79211cdc8c509b183cb69bddad8",
+    strip_prefix = "grpc-1.22.0",
+    urls = ["https://github.com/grpc/grpc/archive/v1.22.0.tar.gz"],
+)
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "bbccf674aa441c266df9894182d80de104cabd19be98be002f6d478aaa31574d",
+    strip_prefix = "bazel-skylib-2169ae1c374aab4a09aa90e65efe1a3aad4e279b",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/archive/2169ae1c374aab4a09aa90e65efe1a3aad4e279b.tar.gz"],
+)
+
+bind(
+    # required by cc_proto_library
+    name = "com_google_protobuf_cc",
+    actual = "@com_google_protobuf",
+)
+
+bind(
+    name = "protobuf",
+    actual = "@com_google_protobuf//:protobuf",
+)
+
+bind(
+    name = "protobuf_clib",
+    actual = "@com_google_protobuf//:protoc_lib",
+)
+
+bind(
+    name = "protobuf_headers",
+    actual = "@com_google_protobuf//:protobuf_headers",
+)
+
+bind(
+    name = "protocol_compiler",
+    actual = "@com_google_protobuf//:protoc",
+)

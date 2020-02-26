@@ -1,0 +1,13 @@
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+
+git_repository(
+    name = "lib_second",
+    init_submodules = True,
+    remote = "http://videobase:video147258369BASE@git.code.oa.com/allencheng/bazel_second_depends.git",
+    branch = "master",
+)
+
+
+
+
