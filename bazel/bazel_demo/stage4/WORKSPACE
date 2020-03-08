@@ -1,0 +1,10 @@
+new_local_repository(
+    name = "hello_greet_lib",
+    build_file = "//:greet.BUILD",
+    path = "../hello-greet-lib/some_lib",
+)
+
+local_repository(
+    name = "hello_time_lib",
+    path = "../hello-time-lib",
+)

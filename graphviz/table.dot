@@ -1,0 +1,20 @@
+digraph {
+
+    label = "\n 图 5-2    带有不同层高的节点";
+
+    rankdir = LR;
+
+    //
+
+    node [shape = record];
+
+    n1 [label = " zskiplistNode | level[0] | backward | score | obj "];
+    n2 [label = " zskiplistNode | level[2] | level[1] | level[0] | backward | score | obj "];
+    n3 [label = " zskiplistNode | level[4] | level[3] | level[2] | level[1] | level[0] | backward | score | obj "];
+
+    //
+
+    edge [style = invis];
+
+    n1 -> n2 -> n3;
+}
