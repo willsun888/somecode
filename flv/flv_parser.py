@@ -3,6 +3,9 @@
 from enum import Enum
 import bitstruct
 
+import pyamf
+from pyamf import amf3, amf0, util, xml, python
+
 class TagType(Enum):
     AUDIO = 0x8
     VIDEO = 0x9
@@ -81,7 +84,14 @@ class ScriptDataTAG:
         tag = bitstruct.unpack("u8", self.file.read(1))
         self.type = tag[0]
         if self.type == ScriptDataType.SCRIPTDATASTRING.value:
-            SCRIPTDATASTRING(self.file).print()
+            #SCRIPTDATASTRING(self.file).print()
+            buf = util.BufferedByteStream(f)
+            buf.seek(25)
+            ba = amf0.Decoder(buf)
+            print("-------------------")
+            print(ba.readString())
+            print("-------------------")
+
         elif self.type == ScriptDataType.SCRIPTDATAECMAARRAY.value:
             print("\t\tAMF1 type: SCRIPTDATAECMAARRAY")
             print("\t\tAMF1 metadata count: %d" % alen)
