@@ -22,9 +22,6 @@ class ScriptDataType(Enum):
     SCRIPTDATADATE = 11
     SCRIPTDATALONGSTRING = 12
 
-FLV_HEADER_SIZE = 9
-FLVTAG_HEADER_SIZE = 15
-
 class FLVHeader:
     def __init__(self, file):
         self.file = file
@@ -81,24 +78,27 @@ class TAGHeader:
 class ScriptDataTAG:
     def __init__(self, file):
         self.file = file
-        self.buf = util.BufferedByteStream(self.file)
-        self.buf.seek(24)
-
-    def getTagType(self):
-        tag = bitstruct.unpack("r8", self.file.read(1))
-        self.buf.seek(1)
-        return tag[0]
+        self.decode()
 
     def decode(self):
-        type = self.getTagType()
-        ba = amf0.Decoder(self.buf)
-        print("-------------------")
-        print(ba.getTypeFunc(type)())
-        print("-------------------")
+        tag = bitstruct.unpack("u8", self.file.read(1))
+        self.type = tag[0]
+        if self.type == ScriptDataType.SCRIPTDATASTRING.value:
+            #SCRIPTDATASTRING(self.file).print()
+            buf = util.BufferedByteStream(f)
+            buf.seek(25)
+            ba = amf0.Decoder(buf)
+            print("-------------------")
+            print(ba.readString())
+            print("-------------------")
+
+        elif self.type == ScriptDataType.SCRIPTDATAECMAARRAY.value:
+            print("\t\tAMF1 type: SCRIPTDATAECMAARRAY")
+            print("\t\tAMF1 metadata count: %d" % alen)
+            print("\t\tMetadata:")
 
     def str(self):
-        pass
-        #return "ScriptDataTAG, type:{0}".format(self.type)
+        return "ScriptDataTAG, type:{0}".format(self.type)
 
 class SCRIPTDATAVALUE:
     def __init__(self, file):
