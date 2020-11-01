@@ -1,0 +1,30 @@
+@startuml class-sample
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+abstract class SrsPacket {
+    + virtual srs_error_t to_msg(SrsCommonMessage* msg, int stream_id);
+    + virtual srs_error_t encode(int& size, char*& payload)
+    + virtual srs_error_t decode(SrsBuffer* stream)
+}
+
+SrsPacket<|--SrsConnectAppPacket
+SrsPacket<|--SrsOnStatusCallPacket
+SrsPacket<|--SrsCallPacket
+SrsPacket<|--SrsPlayPacket
+SrsPacket<|--SrsCreateStreamPacket
+SrsPacket<|--SrsPausePacket
+SrsPacket<|--SrsCloseStreamPacket
+SrsPacket<|--SrsPublishPacket
+SrsPacket<|--SrsSetPeerBandwidthPacket
+SrsPacket<|--SrsSetChunkSizePacket
+
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml class-sample
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+class SrsSourceManager {
+    map<std::string, SrsSource*> pool
+    fetch_or_create(SrsRequest*, ISrsSourceHandler*, SrsSource**)
+}
+
+class SrsSource {}
+class SrsPlayEdge {}
+class SrsPublishEdge {}
+class SrsGopCache {}
+class SrsOriginHub {}
+class SrsMetaCache {}
+
+SrsSourceManager-->SrsSource
+SrsSource-->SrsPlayEdge
+SrsSource-->SrsPublishEdge
+SrsSource-->SrsGopCache
+SrsSource-->SrsOriginHub
+SrsSource-->SrsMetaCache
+
+@enduml
