@@ -74,29 +74,32 @@ class codec.h264.CodecData {
 class codec.aac.CodecData {}
 
 class HandlerMuxer {
+    WriteHeader(streams []av.CodecData) (err error)
+    WriteTrailer() (err error)
+    Close() error
 }
 
 class HandlerDemuxer {
+    Close() error
 }
 
+av.PacketReader<|--av.Demuxer
+av.PacketWriter<|--av.Muxer
+av.MuxCloser-|>av.Muxer
+av.Demuxer<|-av.DemuxCloser
+av.Muxer<|..flv.Muxer
+av.Demuxer<|..flv.Demuxer
+HandlerMuxer-->av.MuxCloser
+HandlerDemuxer-->av.DemuxCloser
+flv.Demuxer-->flv.Prober
+HandlerMuxer-->flv.Muxer
+HandlerDemuxer-->flv.Demuxer
 av.CodecData<|--av.VideoCodecData
 av.CodecData<|--av.AudioCodecData
-av.PacketReader<|-- av.Demuxer
-av.PacketWriter<|--av.Muxer
-av.Demuxer<|-- av.DemuxCloser
-av.Muxer<|--av.MuxCloser
-av.Demuxer<|..flv.Demuxer
-av.Demuxer-[hidden]-->flv.Demuxer
-av.Muxer<|..flv.Muxer
-av.Muxer-[hidden]-->flv.Muxer
-av.DemuxCloser<|..HandlerDemuxer
-av.MuxCloser<|..HandlerMuxer
-flv.Demuxer<--HandlerDemuxer
-flv.Muxer<--HandlerMuxer
-flv.Demuxer<-flv.Prober
 av.VideoCodecData<|--codec.h264.CodecData
-av.VideoCodecData -[hidden]--> codec.h264.CodecData
 av.AudioCodecData<|--codec.aac.CodecData
-av.AudioCodecData-[hidden]--> codec.aac.CodecData
-' av.CodecData<--flv.Muxer
+av.MuxCloser-[hidden]--> flv.Muxer
+av.DemuxCloser-[hidden]--> flv.Demuxer
+av.MuxCloser-[hidden]-->HandlerMuxer
+av.DemuxCloser-[hidden]-->HandlerDemuxer
 @enduml
