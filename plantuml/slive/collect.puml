@@ -8,7 +8,7 @@
 ' RED_ARROW
 'MEGENTA_ARROW
 
-title <size:20>收流和转发流过程</size>
+title <size:20> 收流和转发流过程 </size>
 
 actor User
 participant "CDN" as CDN

@@ -1,0 +1,20 @@
+@startuml httpflv-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>http-flv播放流程/size>
+
+actor User
+' participant "SLive" as SLive
+' participant "RTMPServer" as Server
+participant "HTTPFLVServer" as HTTPFLVServer
+participant "RTMPReceiver" as RTMPReceiver
+participant "Stream" as Stream
+
+SLive->HTTPFLVServer: ListenAndServe("rtmp", "10.10.10.10:80")
+User->SLive: 播放http://host/mountpoint/streamID.flv
+SLive->HTTPFLVServer: Serve(w http.ResponseWriter, r *http.Request)
+HTTPFLVServer-> Stream: GetStream(streamID)
+HTTPFLVServer-> Stream: 
+@enduml

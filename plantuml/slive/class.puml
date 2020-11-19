@@ -61,6 +61,23 @@ class protocol.rtmp.Conn {
     NewConn(conn net.Conn) error
 }
 
+interface stream.Streamer {
+	Demuxer() av.Demuxer
+	Muxer() av.Muxer
+}
+
+interface stream.Receiver {
+	Prepare() error
+	Stop()
+	Cycle()
+}
+
+interface stream.Ingester {
+	Prepare() error
+	Stop()
+	Cycle()
+}
+
 protocol.rtmp.Session<|..protocol.rtmp.ServerSession
 protocol.rtmp.Session<|..protocol.rtmp.ClientSession
 server.Handler<|..server.RTMPServer
@@ -69,12 +86,16 @@ server.Handler<|..server.AdminServer
 server.RTMPServer<--server.Server
 server.HTTPFLVServer<--server.Server
 server.AdminServer<--server.Server
-stream.RTMPServerIngester<--server.RTMPServer
-stream.GOPCache<--server.RTMPServer
-stream.RTMPServerIngester-->protocol.rtmp.ServerSession
-stream.RTMPClientIngester<--server.RTMPClient
-stream.GOPCache<--server.RTMPClient
-stream.RTMPClientIngester-->protocol.rtmp.ClientSession
+stream.Receiver<--server.RTMPServer
+stream.Queue<--server.RTMPServer
+stream.Receiver<|..stream.RTMPReceiver
+stream.Streamer<|--stream.Receiver
+stream.Streamer<|--stream.Ingester
+stream.RTMPReceiver-->protocol.rtmp.ServerSession
+stream.Ingester<|..stream.RTMPIngester
+stream.Ingester<--server.RTMPClient
+stream.Queue<--server.RTMPClient
+stream.RTMPIngester-->protocol.rtmp.ClientSession
 protocol.rtmp.ServerSession<|..protocol.rtmp.serverSession
 protocol.rtmp.ClientSession<|..protocol.rtmp.clientSession
 protocol.rtmp.clientSession-->protocol.rtmp.Conn

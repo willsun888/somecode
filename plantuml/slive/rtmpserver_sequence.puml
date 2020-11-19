@@ -1,0 +1,37 @@
+@startuml rtmpserver-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>rtmp服务接收流流程</size>
+
+actor User
+participant "SLive" as SLive
+participant "RTMPServer" as RTMPServer
+participant "RTMPReceiver" as RTMPReceiver
+participant "RTMPSession" as RTMPSession
+participant "Queue" as GOPCache
+
+SLive->RTMPServer: ListenAndServe("rtmp", "10.10.10.10:1935")
+User->SLive: 推流rtmp://host/mountpoint/streamID
+SLive->RTMPServer: Serve(net.Conn)
+RTMPServer->RTMPReceiver: NewRTMPReceiver(net.Conn)
+RTMPServer->RTMPReceiver: Prepare()
+RTMPReceiver->RTMPSession: HandshakeServer()
+RTMPReceiver->RTMPSession: ReadConnect()
+RTMPReceiver->RTMPReceiver: checkHost
+RTMPReceiver->RTMPServer: 成功建立RTMP连接
+RTMPServer->RTMPReceiver: Cycle()
+loop
+    alt timeout或canceled
+        RTMPReceiver->RTMPReceiver: ContextDone(ctx)
+        destroy RTMPReceiver
+    else 
+        RTMPReceiver->RTMPReceiver: processMsg()
+        RTMPReceiver->RTMPSession: ReadHeaders()
+        RTMPReceiver->GOPCache: PushHeader()
+        RTMPReceiver->RTMPSession: ReadPacket()
+        RTMPReceiver->GOPCache: PushPacket()
+    end
+end
+@enduml
