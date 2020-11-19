@@ -1,0 +1,86 @@
+@startuml slive-class
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface protocol.rtmp.Session {
+	Close()
+	ReadConnect() error
+	RemoteAddr() string
+	SessionInfo() SessionInfo
+}
+
+interface protocol.rtmp.ServerSession {
+    HandshakeServer() error
+	ReadPacket() (*avdata.Packet, error)
+	ReadHeaders() ([]avdata.Header, error)
+	IsPublishing() bool
+	IsPlaying() bool
+	VideoResolution(headers []avdata.Header) (uint32, uint32)
+}
+
+interface protocol.rtmp.ClientSession {
+    Dial(url string) error
+	HandshakeClient() error
+	ConnectPublish() error 
+	ConnectPlay() error
+	WritePacket(pkt avdata.Packet) error
+	WriteHeaders(headers []avdata.Header) error
+}
+
+class protocol.rtmp.serverSession {
+
+}
+class protocol.rtmp.clientSession {
+
+}
+
+interface server.Handler {
+    Serve(conn net.Conn)
+}
+
+class server.RTMPServer {
+    Serve(conn net.Conn)
+}
+
+class server.Server {
+    ListenAndServe(ctx context.Context, opts ...ListenServeOption) error
+    listenAndServeRTMP(ctx context.Context,
+	opts *ListenServeOptions) error
+    listenAndServeHTTP(ctx context.Context,
+	opts *ListenServeOptions) error
+}
+
+class protocol.rtmp.Conn {
+    NewConn(conn net.Conn) error
+}
+
+protocol.rtmp.Session<|..protocol.rtmp.ServerSession
+protocol.rtmp.Session<|..protocol.rtmp.ClientSession
+server.Handler<|..server.RTMPServer
+server.Handler<|..server.HTTPFLVServer
+server.Handler<|..server.AdminServer
+server.RTMPServer<--server.Server
+server.HTTPFLVServer<--server.Server
+server.AdminServer<--server.Server
+stream.RTMPServerIngester<--server.RTMPServer
+stream.GOPCache<--server.RTMPServer
+stream.RTMPServerIngester-->protocol.rtmp.ServerSession
+stream.RTMPClientIngester<--server.RTMPClient
+stream.GOPCache<--server.RTMPClient
+stream.RTMPClientIngester-->protocol.rtmp.ClientSession
+protocol.rtmp.ServerSession<|..protocol.rtmp.serverSession
+protocol.rtmp.ClientSession<|..protocol.rtmp.clientSession
+protocol.rtmp.clientSession-->protocol.rtmp.Conn
+protocol.rtmp.serverSession-->protocol.rtmp.Conn
+protocol.rtmp.Conn-->av.CodecData
+protocol.rtmp.Conn-->av.Packet
+protocol.rtmp.Conn-->flv.Prober
+
+@enduml

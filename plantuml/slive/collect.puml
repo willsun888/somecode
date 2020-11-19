@@ -1,0 +1,46 @@
+@startuml collect-forward-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+
+' LAYOUT_AS_SKETCH()
+' 设置红色箭头，分图定义有冲突
+' RED_ARROW
+'MEGENTA_ARROW
+
+title <size:20>收流和转发流过程</size>
+
+actor User
+participant "CDN" as CDN
+participant "RTMPServer" as Server
+participant "Publisher" as Publisher
+participant "Queue" as Queue
+participant "Forwarder" as Forwarder
+participant "ForwardSource" as ForwardSource
+
+User -> CDN: 推流
+
+activate CDN
+CDN -> Server: rtmp握手
+activate Server
+Server --> CDN
+CDN -> Server: rtmp命令：connect
+CDN -> Server: rtmp命令：publish
+Server --> CDN: rtmp回包
+Server -> Publisher: NewPublisher(rtmpSession(conn),queue)  
+Server -> Forwarder: NewForwarder(queueCursor)  
+loop
+    Publisher -> Publisher: 接收tcp流
+    Publisher -> Publisher: rtmp分出A/V包
+    Publisher -> Queue: 将A/V包放入队列
+    Queue -> Forwarder: 广播A/V包已经进来
+end
+    Forwarder -> Forwarder: 跟转发URL建立rtmp连接
+    Forwarder -> ForwardSource: NewForwardSource(rtmpSession(conn))
+loop
+    Forwarder -> Queue: 接收从队列取A/V包
+    Forwarder -> ForwardSource: WriteHeader
+    Forwarder -> ForwardSource: WritePacket
+end
+
+@enduml
