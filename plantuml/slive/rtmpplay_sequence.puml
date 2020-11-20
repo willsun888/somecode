@@ -1,0 +1,58 @@
+@startuml rtmpplay-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>播放rtmp流流程</size>
+
+actor User
+participant "SLive" as SLive
+participant "RTMPServer" as RTMPServer
+participant "RTMPReceiver" as RTMPReceiver
+participant "RTMPSession" as RTMPSession
+participant "RTMPJitter" as RTMPJitter
+participant "Queue" as GOPCache
+participant "RTMPPlayer" as RTMPPlayer
+
+== RTMPServer启动 ==
+SLive->SLive: GetGlobalConfig()(获取server监听参数)
+SLive->RTMPServer: ListenAndServe("rtmp", "10.10.10.10:1935")
+== 建立rtmp连接 ==
+User->SLive: 推流rtmp://host/mountpoint/streamID
+SLive->RTMPServer: Serve(net.Conn)
+RTMPServer->RTMPReceiver: NewRTMPReceiver(net.Conn)
+RTMPServer->RTMPReceiver: Prepare()
+RTMPReceiver->RTMPSession: HandshakeServer()
+RTMPReceiver->RTMPSession: ReadConnect()
+RTMPReceiver->RTMPSession: IsPlaying()(如果是play命令)
+== 回调rtmp Hook ==
+RTMPSession->RTMPJitter: 回调OnPrepare()
+RTMPJitter->RecordManager: GetSessionLastPts()
+== 播放rtmp流程 ==
+RTMPReceiver->RTMPReceiver: checkHost
+RTMPReceiver->Stream: GetStream(streamID)
+RTMPReceiver->RTMPServer: 成功建立RTMP连接
+RTMPReceiver->RTMPPlayer: NewRTMPPlayer(stream)
+RTMPReceiver->RTMPPlayer: Cycle()(新启goroutine执行)
+loop
+    RTMPPlayer->RTMPPlayer: ContextDone(ctx)
+    alt timeout或canceled
+        RTMPPlayer->RTMPPlayer: Stop()
+        destroy RTMPPlayer
+    else 
+        RTMPPlayer->GOPCache: Headers()
+        RTMPPlayer->RTMPSession: WriteHeaders()
+        RTMPPlayer->GOPCache: ReadPacket()
+        RTMPPlayer->RTMPJitter: Correct(pkt)
+        RTMPPlayer->RTMPSession: WritePacket()
+        RTMPPlayer->RTMPPlayer: processCmd()
+        RTMPPlayer->RTMPSession: ReadCommand()
+        alt deleteStream
+            RTMPPlayer->RTMPPlayer: Stop()
+            destroy RTMPPlayer
+        end
+    end
+end
+@enduml
+
+@enduml

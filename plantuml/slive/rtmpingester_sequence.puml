@@ -1,0 +1,45 @@
+@startuml rtmpingester-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>采集rtmp流流程(主动拉流)</size>
+
+actor User
+participant "SLive" as SLive
+participant "HTTPAdminServer" as HTTPAdminServer
+participant "RTMPIngester" as RTMPIngester
+participant "RTMPSession" as RTMPSession
+participant "Queue" as GOPCache
+
+== HTTPServer启动 ==
+SLive->SLive: GetGlobalConfig()(获取server监听参数)
+SLive->HTTPAdminServer: ListenAndServe("rtmp", "10.10.10.10:1935"
+== 发起主动拉rtmp流 ==
+User->SLive: http://host/api/v1/stream/submit
+SLive->HTTPAdminServer: StreamSubmitHandle(w, r)
+HTTPAdminServer->RTMPIngester: NewRTMPIngester(url)
+HTTPAdminServer->RTMPIngester: Prepare()
+RTMPIngester->RTMPSession: HandshakeClient()
+RTMPIngester->RTMPSession: ReadConnect()
+HTTPAdminServer->RTMPIngester: Cycle()(新启goroutine执行
+loop
+    RTMPIngester->RTMPIngester: ContextDone(ctx)
+    alt timeout或canceled
+        RTMPIngester->RTMPIngester: Stop()
+        destroy RTMPIngester
+    else 
+        RTMPIngester->RTMPIngester: processMsg()
+        RTMPIngester->RTMPSession: ReadHeaders()
+        RTMPIngester->GOPCache: PushHeader()
+        RTMPIngester->RTMPSession: ReadPacket()
+        RTMPIngester->GOPCache: PushPacket()
+        RTMPIngester->RTMPPublisher: processCmd()
+        RTMPIngester->RTMPSession: ReadCommand()
+        alt deleteStream
+            RTMPIngester->RTMPIngester: Stop()
+            destroy RTMPIngester
+        end
+    end
+end
+@enduml

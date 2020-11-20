@@ -46,15 +46,10 @@ interface server.Handler {
 }
 
 class server.RTMPServer {
-    Serve(conn net.Conn)
 }
 
 class server.Server {
     ListenAndServe(ctx context.Context, opts ...ListenServeOption) error
-    listenAndServeRTMP(ctx context.Context,
-	opts *ListenServeOptions) error
-    listenAndServeHTTP(ctx context.Context,
-	opts *ListenServeOptions) error
 }
 
 class protocol.rtmp.Conn {
@@ -62,46 +57,59 @@ class protocol.rtmp.Conn {
 }
 
 interface stream.Streamer {
+	Prepare() error
+	Stop()
+	Cycle()
 	Demuxer() av.Demuxer
 	Muxer() av.Muxer
+	Name() string
+	Role() string
+}
+package av #DDDDDD {
+	interface av.CodecData {}
+	interface av.Muxer {}
+	interface av.Demuxer {}
+	class av.Packet {}
 }
 
-interface stream.Receiver {
-	Prepare() error
-	Stop()
-	Cycle()
+interface protocol.rtmp.Hook #DDDDDD {
+	OnPrepare() error
+	OnPublish() error
+	OnUnPublish() error
+	OnPlay() error
 }
 
-interface stream.Ingester {
-	Prepare() error
-	Stop()
-	Cycle()
-}
-
-protocol.rtmp.Session<|..protocol.rtmp.ServerSession
-protocol.rtmp.Session<|..protocol.rtmp.ClientSession
+protocol.rtmp.ServerSession..|>protocol.rtmp.Session
+protocol.rtmp.ClientSession..|>protocol.rtmp.Session
 server.Handler<|..server.RTMPServer
 server.Handler<|..server.HTTPFLVServer
 server.Handler<|..server.AdminServer
 server.RTMPServer<--server.Server
 server.HTTPFLVServer<--server.Server
 server.AdminServer<--server.Server
-stream.Receiver<--server.RTMPServer
-stream.Queue<--server.RTMPServer
-stream.Receiver<|..stream.RTMPReceiver
-stream.Streamer<|--stream.Receiver
-stream.Streamer<|--stream.Ingester
-stream.RTMPReceiver-->protocol.rtmp.ServerSession
-stream.Ingester<|..stream.RTMPIngester
-stream.Ingester<--server.RTMPClient
-stream.Queue<--server.RTMPClient
+stream.Streamer<--server.RTMPServer
+stream.Streamer<|..stream.RTMPIngester
+stream.Streamer<|..stream.RTMPPublisher
+stream.Streamer<|..stream.RTMPPlayer
+stream.Streamer<|..stream.RTMPForwarder
+stream.Streamer<--server.RTMPClient
+stream.QueueCursor<-stream.Queue
+stream.Queue<--stream.RTMPIngester
+stream.Queue<--stream.RTMPPublisher
+stream.QueueCursor<--stream.RTMPPlayer
+stream.QueueCursor<--stream.RTMPForwarder
+stream.RTMPReceiver-->stream.RTMPPublisher
+stream.RTMPReceiver-->stream.RTMPPlayer
+stream.RTMPPlayer-->protocol.rtmp.ServerSession
+stream.RTMPPublisher-->protocol.rtmp.ServerSession
 stream.RTMPIngester-->protocol.rtmp.ClientSession
+stream.RTMPForwarder-->protocol.rtmp.ClientSession
 protocol.rtmp.ServerSession<|..protocol.rtmp.serverSession
 protocol.rtmp.ClientSession<|..protocol.rtmp.clientSession
 protocol.rtmp.clientSession-->protocol.rtmp.Conn
 protocol.rtmp.serverSession-->protocol.rtmp.Conn
 protocol.rtmp.Conn-->av.CodecData
 protocol.rtmp.Conn-->av.Packet
-protocol.rtmp.Conn-->flv.Prober
+protocol.rtmp.Conn-->protocol.rtmp.Hook
 
 @enduml

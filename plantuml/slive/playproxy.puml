@@ -1,0 +1,20 @@
+@startuml playproxy-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>播放回源流程/size>
+
+actor User
+participant "SLive" as SLive
+
+User->SLive: 推流rtmp://host/mountpoint/streamID
+RTMPServer->RTMPReceiver: NewRTMPReceiver(net.Conn)
+RTMPServer->RTMPReceiver: Prepare()
+RTMPReceiver->RTMPSession: HandshakeServer()
+RTMPReceiver->RTMPSession: ReadConnect()
+RTMPReceiver->RTMPSession: IsPlaying()(如果是play命令)
+RTMPReceiver->RTMPReceiver: checkHost
+RTMPReceiver->Stream: GetStream(streamID)
+
+@enduml

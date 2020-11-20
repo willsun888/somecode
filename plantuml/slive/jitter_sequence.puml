@@ -1,0 +1,8 @@
+@startuml playproxy-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>jitter流程/size>
+participant "SLive" as SLive
+

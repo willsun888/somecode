@@ -61,6 +61,13 @@ class flv.Muxer {
 	streams []av.CodecData
 }
 
+interface flv.writeFlusher {
+}
+interface io.Writer {
+}
+interface http.Flusher {
+}
+
 class flv.Prober {
     Streams  []av.CodecData
 	CachedPkts []av.Packet
@@ -98,6 +105,10 @@ av.CodecData<|--av.VideoCodecData
 av.CodecData<|--av.AudioCodecData
 av.VideoCodecData<|--codec.h264.CodecData
 av.AudioCodecData<|--codec.aac.CodecData
+flv.Muxer-->flv.writeFlusher
+flv.writeFlusher-->http.Flusher
+flv.writeFlusher-->io.Writer
+http.Flusher<|..http.ResponseWriter
 av.MuxCloser-[hidden]--> flv.Muxer
 av.DemuxCloser-[hidden]--> flv.Demuxer
 av.MuxCloser-[hidden]-->HandlerMuxer

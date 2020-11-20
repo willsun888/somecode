@@ -3,18 +3,40 @@
 ' uncomment the following line and comment the first to use locally
 '!include core.pum
 
-title <size:20>http-flv播放流程/size>
+title <size:20>httpflv播放流程</size>
 
 actor User
-' participant "SLive" as SLive
+participant "SLive" as SLive
 ' participant "RTMPServer" as Server
 participant "HTTPFLVServer" as HTTPFLVServer
-participant "RTMPReceiver" as RTMPReceiver
 participant "Stream" as Stream
+participant "QueueCursor" as QueueCursor
+participant "HTTPFLVPlayer" as HTTPFLVPlayer
+participant "flv" as flv
+participant "flv.Muxer" as flv.Muxer
 
+== HTTPFLVServer启动 ==
+SLive->SLive: GetGlobalConfig()(获取server监听参数)
 SLive->HTTPFLVServer: ListenAndServe("rtmp", "10.10.10.10:80")
+== httpflv播放流程 ==
 User->SLive: 播放http://host/mountpoint/streamID.flv
 SLive->HTTPFLVServer: Serve(w http.ResponseWriter, r *http.Request)
+HTTPFLVServer->HTTPFLVServer: checkHost
 HTTPFLVServer-> Stream: GetStream(streamID)
-HTTPFLVServer-> Stream: 
+HTTPFLVServer-> HTTPFLVPlayer: NewHTTPFLVPlayer(stream)
+HTTPFLVPlayer-> flv: NewMuxerWriteFlusher()(返回flv.Muxer)
+HTTPFLVPlayer-> Stream: CursorByDelayedFrame()(返回QueueCursor)
+HTTPFLVPlayer-> QueueCursor: Headers()(获取流头部信息)
+HTTPFLVPlayer-> flv.Muxer: WriteHeader()
+loop
+    HTTPFLVPlayer->HTTPFLVPlayer: ContextDone(ctx)
+    alt timeout或canceled
+        HTTPFLVPlayer->HTTPFLVPlayer: Stop()
+        destroy HTTPFLVPlayer
+    else 
+        HTTPFLVPlayer->QueueCursor: ReadPacket()
+        HTTPFLVPlayer->flv.Muxer: WritePacket()
+    end
+end
+    HTTPFLVPlayer->flv.Muxer: WriteTrailer()
 @enduml

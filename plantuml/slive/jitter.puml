@@ -1,0 +1,31 @@
+@startuml jitter-class
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface protocol.rtmp.Jitter {
+    Correct(pkt *av.Packet)
+    CorrectAbsoluteTime(pkt *av.Packet) {
+}
+
+interface protocol.rtmp.Hook {
+	OnPrepare() error
+	OnPublish() error
+	OnUnPublish() error
+	OnPlay() error
+}
+
+class stream.RTMPJitter {
+}
+
+protocol.rtmp.Jitter<|..stream.RTMPJitter
+protocol.rtmp.Hook<|..stream.RTMPJitter
+stream.RTMPJitter-->录制系统.RecordManager
+
+@enduml
