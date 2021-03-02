@@ -1,0 +1,48 @@
+@startuml class-streammanager
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface stream.StreamHandler {
+    Prepare() error
+    Cycle() error
+    Stop()
+    Type() HandleType
+}
+
+class stream.Stream {
+    players []stream.StreamHandler  
+    forwarders []stream.StreamHandler   
+    ingester stream.StreamHandler   
+    publisher stream.StreamHandler   
+}
+
+package stream {
+    package rtmp {}
+    package httpflv {}
+}
+
+stream.StreamHandler <|.. stream.rtmp.Ingester
+stream.StreamHandler <|.. stream.rtmp.Publisher
+stream.StreamHandler <|.. stream.rtmp.Forwarder 
+stream.StreamHandler <|.. stream.rtmp.Player
+
+stream.Stream "1" *-- "n" stream.StreamHandler
+
+' stream.Stream "1" *-- "n" stream.rtmp.Ingester
+' stream.Stream "1" *-- "1" stream.rtmp.Publisher
+' stream.Stream "1" *-- "1..n" stream.rtmp.Forwarder 
+' stream.Stream "1" *-- "1..n" stream.rtmp.Player
+
+stream.streams "1" *-- "n" stream.Stream
+
+stream.StreamHandler <|.. stream.httpflv.Ingester
+stream.StreamHandler <|.. stream.httpflv.Player
+
+@enduml

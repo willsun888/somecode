@@ -1,0 +1,31 @@
+@startuml state-stream
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+
+GREEN_ARROW
+
+title Publisher States
+
+[*] -> Publisher.StatusInit: 接收推流
+Publisher.StatusInit: Prepare()
+Publisher.StatusInit -> Publisher.StatusOK: success
+Publisher.StatusOK: CopyAV()
+Publisher.StatusOK -> Publisher.StatusOK: success
+Publisher.StatusOK --> Publisher.Error: fail
+Publisher.Error: WaitTimeout()
+Publisher.Error --> Publisher.Error: wait
+Publisher.Error --> Publisher.StatusDeath: timeout
+Publisher.StatusDeath --> Ingester.StatusInit: 切换到拉流模式
+Ingester.StatusInit: Prepare()
+Ingester.StatusInit --> Ingester.StatusOK : success
+Ingester.StatusOK: CopyAV()
+Ingester.StatusOK --> Ingester.StatusOK: success
+Ingester.StatusOK --> Ingester.Error: fail
+Ingester.Error: WaitTimeout()
+Ingester.Error --> Ingester.Error: wait
+Ingester.Error --> Ingester.StatusDeath: timeout
+Ingester.StatusDeath --> Publisher.StatusInit: 重新推流
+Ingester.StatusDeath --> [*] : death
+
+@enduml

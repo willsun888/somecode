@@ -1,0 +1,36 @@
+@startuml class-streamlib
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.DemuxCloser {} 
+interface av.MuxCloser {} 
+
+interface protocol.rtmp.Conn {
+	ReadConnect() error
+	ReadCommand() error
+	RemoteAddr() string
+	ConnInfo() ConnInfo
+
+    Dial(url string) error
+	HandshakeClient() error
+	ConnectPublish() error
+	ConnectPlay() error
+
+	HandshakeServer() error
+	IsPublishing() bool
+	IsPlaying() bool
+	VideoResolution(headers []av.Header) (uint32, uint32)
+}
+
+protocol.rtmp.Conn <|.. protocol.rtmp.conn
+av.MuxCloser <|-- protocol.rtmp.Conn
+av.DemuxCloser <|-- protocol.rtmp.Conn
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml state-stream
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+
+GREEN_ARROW
+
+' title Stream States
+
+[*] -> StatusInit
+StatusInit --> StatusOK : Publisher(Init->OK)\n或Ingester(Init->OK)
+StatusOK --> StatusOK: Publisher(OK->OK)\n或Ingester(OK->OK)
+StatusOK --> StatusError: Publisher(OK->Error)\n或Ingester(OK->Error)
+StatusError -> StatusError: Publisher(WaitTimeout)\n或Ingester(WaitTimeout)
+StatusError --> StatusInit: Publisher(ErrorTimeout)\n和Ingester(Init)
+StatusError --> StatusDeath: Ingester(ErrorTimeout)
+StatusDeath -> [*]: death
+
+@enduml

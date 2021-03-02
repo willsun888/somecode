@@ -1,0 +1,117 @@
+@startuml slive-simple-class
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface protocol.rtmp.Session {
+}
+
+interface server.Handler {
+    Serve(conn net.Conn)
+}
+
+interface http.Handler  {
+	ServeHTTP(ResponseWriter, *Request)
+}
+
+class server.RTMPServer {
+}
+
+class server.Server {
+    ListenAndServe(ctx context.Context, opts ...ListenServeOption) error
+}
+
+class protocol.rtmp.Conn {
+    NewConn(conn net.Conn) error
+}
+
+package stream {
+	package rtmp {}
+	package httpflv {}
+	rtmp -[hidden]> httpflv
+}
+
+package http #DDDDDD {
+}
+
+package http2 #DDDDDD {
+}
+
+package av #DDDDDD {
+	interface av.CodecData {}
+	interface av.Muxer {}
+	interface av.Demuxer {}
+	class av.Packet {}
+}
+
+' class server.ListenServeOptions {
+' 	ReadTimeout  time.Duration
+' 	WriteTimeout time.Duration
+
+' 	Address  string
+' 	Protocol string
+' 	Handler  Handler
+
+' 	TLSCertFile string
+' 	TLSKeyFile  string
+' }
+
+interface stream.Streamer {
+	Prepare() error
+	Cycle() error
+	Stop() 
+	Type()
+}
+
+interface container.flv.WriteFlusher {
+}
+interface io.Writer {
+}
+interface http2.Flusher {
+}
+
+
+' stream.receivers->stream.rtmp.Receiver
+' stream.players->stream.rtmp.Player
+' stream.players->stream.httpflv.Player
+' stream.forwarders->stream.rtmp.Forwarder
+container.flv.Muxer-->container.flv.WriteFlusher
+container.flv.WriteFlusher-->http2.Flusher
+container.flv.WriteFlusher-->io.Writer
+http2.Flusher<|..http2.ResponseWriter
+server.Handler<--server.Server
+http.Handler<--server.Server
+server.Handler<|..server.RTMPServer
+http.Handler<|..server.HTTPFLVServer
+http.Handler<|..server.AdminServer
+
+' httpflv
+server.RTMPServer-->stream.rtmp.PreHandler
+server.RTMPServer-->stream.rtmp.Ingester
+server.RTMPServer-->stream.rtmp.Receiver
+server.RTMPServer-->stream.rtmp.Forwarder
+server.RTMPServer-->stream.rtmp.Player
+stream.rtmp.Forwarder..|>stream.Streamer
+stream.rtmp.Receiver..|>stream.Streamer
+stream.rtmp.Player..|>stream.Streamer
+stream.rtmp.Forwarder..|>stream.Streamer
+
+stream.rtmp.Forwarder-->stream.Consumer
+stream.rtmp.Player-->stream.Consumer
+stream.rtmp.Ingester-->stream.Producer
+stream.rtmp.Receiver-->stream.Producer
+
+avque.Queue->avque.QueueCursor
+stream.Producer->avque.Queue
+avque.QueueCursor<-stream.Consumer
+
+' httpflv
+stream.httpflv.Player-->stream.Consumer
+
+@enduml

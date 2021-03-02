@@ -1,0 +1,34 @@
+@startuml slive-simple-class
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.DemuxCloser {}
+interface av.MuxCloser {}
+
+package stream {
+}
+
+class stream.Producer {
+    NewProducer(DemuxCloser, Queue)
+    Produce() error
+}
+class stream.Consumer {
+    NewConsumer(MuxCloser, QueueCursor)
+    Consume() error
+}
+
+stream.Producer --> av.DemuxCloser
+stream.Producer --> avque.Queue
+stream.Consumer --> av.MuxCloser
+stream.Consumer --> avque.QueueCursor
+
+
+
+@enduml

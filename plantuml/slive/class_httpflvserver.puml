@@ -1,0 +1,51 @@
+@startuml class-httpflvserver
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.Demuxer {}
+interface av.Muxer {}
+interface container.flv.WriteFlusher {
+}
+interface io.Writer {
+}
+interface http.Flusher {
+}
+class server.HTTPFLVServer {
+}
+
+interface stream.StreamHandler {}
+
+package stream {
+    package httpflv {}
+}
+
+stream.StreamHandler <|.. stream.httpflv.Ingester
+
+server.HTTPFLVServer-->stream.httpflv.Ingester
+server.HTTPFLVServer-->stream.httpflv.Player
+
+stream.httpflv.Ingester --> av.Transport
+stream.httpflv.Player --> av.Transport
+
+av.Transport --> av.Demuxer
+av.Transport--> av.Muxer
+
+av.Muxer<|..avque.Queue
+av.Demuxer<|..avque.QueueCursor
+
+container.flv.Demuxer-->container.flv.Prober
+av.Muxer<|..container.flv.Muxer
+av.Demuxer<|..container.flv.Demuxer
+container.flv.Muxer-->container.flv.WriteFlusher
+container.flv.WriteFlusher-->http.Flusher
+container.flv.WriteFlusher-->io.Writer
+http.Flusher<|..http.ResponseWriter
+
+@enduml

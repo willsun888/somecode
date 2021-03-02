@@ -1,0 +1,52 @@
+@startuml class-containerflv
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.Muxer {
+	WriteHeader([]CodecData) error
+	WriteTrailer() error
+}
+
+interface av.Demuxer {
+	Streams() ([]CodecData, error)
+}
+
+class container.flv.Demuxer {
+    prober *Prober
+	bufr   *bufio.Reader
+}
+
+class container.flv.Muxer {
+    bufw    WriteFlusher
+	b       []byte
+	streams []av.CodecData
+}
+
+interface container.flv.WriteFlusher {
+}
+interface io.Writer {
+}
+interface http.Flusher {
+}
+
+class container.flv.Prober {
+    Streams  []av.CodecData
+	CachedPkts []av.Packet
+}
+
+av.Muxer<|..container.flv.Muxer
+av.Demuxer<|..container.flv.Demuxer
+container.flv.Demuxer-->container.flv.Prober
+container.flv.Muxer-->container.flv.WriteFlusher
+container.flv.WriteFlusher-->http.Flusher
+container.flv.WriteFlusher-->io.Writer
+http.Flusher<|..http.ResponseWriter
+
+@enduml

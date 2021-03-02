@@ -1,0 +1,38 @@
+@startuml httpflv-class
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+class SliveSvr {}
+class SliveService {}
+class Stream {}
+class Publisher {}
+class Player {}
+interface rtmp.Session {}
+class rtmp.SessionImpl {}
+class Queue {}
+class QueueCursor {}
+class TCPServer {}
+class AdminServer {}
+class HTTPFLVServer {}
+
+SliveSvr --> TCPServer
+SliveSvr --> AdminServer
+SliveSvr --> HTTPFLVServer
+TCPServer --> SliveService
+SliveService "1" *--> "n" Stream
+Stream --> Publisher
+Stream "1" *--> "n" Player
+Publisher --> rtmp.Session
+rtmp.Session <|.. rtmp.SessionImpl
+Publisher --> Queue
+Player --> Session
+Player --> QueueCursor
+Queue --> QueueCursor
+@enduml

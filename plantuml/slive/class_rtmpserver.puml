@@ -1,0 +1,60 @@
+@startuml class-rtmpserver
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.DemuxCloser {}
+interface av.MuxCloser {}
+interface stream.StreamHandler {
+    Prepare() error
+    Cycle() error
+    Stop()
+    Type() HandleType
+}
+
+package stream {
+    package rtmp {}
+}
+
+interface protocol.rtmp.Conn {}
+class protocol.rtmp.conn {}
+
+' class server.RTMPServer {
+' }
+' server.RTMPServer-->stream.rtmp.PreHandler
+' server.RTMPServer-->stream.rtmp.Ingester
+' server.RTMPServer-->stream.rtmp.Publisher
+' server.RTMPServer-->stream.rtmp.Forwarder
+' server.RTMPServer-->stream.rtmp.Player
+
+stream.StreamHandler <|.. stream.rtmp.Ingester
+stream.StreamHandler <|.. stream.rtmp.Publisher
+stream.StreamHandler <|.. stream.rtmp.Forwarder 
+stream.StreamHandler <|.. stream.rtmp.Player
+
+' stream.rtmp.ForwardSource <- stream.rtmp.Forwarder
+
+stream.rtmp.Ingester --> av.Transport
+stream.rtmp.Publisher --> av.Transport
+stream.rtmp.Forwarder --> av.Transport
+stream.rtmp.Player --> av.Transport
+
+av.Transport --> av.DemuxCloser
+av.Transport --> av.MuxCloser
+
+avque.Queue -> avque.QueueCursor
+av.MuxCloser<|..avque.Queue
+av.DemuxCloser<|..avque.QueueCursor
+
+av.MuxCloser <|-- protocol.rtmp.Conn
+av.DemuxCloser <|-- protocol.rtmp.Conn
+stream.rtmp.PreHandler --> protocol.rtmp.Conn
+protocol.rtmp.Conn <|.. protocol.rtmp.conn
+
+@enduml

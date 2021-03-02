@@ -8,9 +8,13 @@ title <size:20>接收rtmp流流程</size>
 actor User
 participant "SLive" as SLive
 participant "RTMPServer" as RTMPServer
-participant "RTMPReceiver" as RTMPReceiver
-participant "RTMPSession" as RTMPSession
-participant "Queue" as GOPCache
+participant "Service" as RTMPService
+participant "Forwarder" as RTMPForwarder
+participant "Producer" as RTMPProducer
+participant "Consumer" as RTMPConsumer
+participant "Session" as RTMPSession
+participant "Queue" as Queue
+participant "QueueCursor" as QueueCursor
 
 == RTMPServer启动 ==
 SLive->SLive: GetGlobalConfig()(获取server监听参数)
@@ -18,32 +22,55 @@ SLive->RTMPServer: ListenAndServe("rtmp", "10.10.10.10:1935")
 == 接收推流流程 ==
 User->SLive: 推流rtmp://host/mountpoint/streamID
 SLive->RTMPServer: Serve(net.Conn)
-RTMPServer->RTMPReceiver: NewRTMPReceiver(net.Conn)
-RTMPServer->RTMPReceiver: Prepare()
-RTMPReceiver->RTMPSession: HandshakeServer()
-RTMPReceiver->RTMPSession: ReadConnect()
-RTMPReceiver->RTMPSession: IsPublishing()(如果是publish命令)
-RTMPReceiver->RTMPReceiver: checkHost
-RTMPReceiver->RTMPServer: 成功建立RTMP连接
-RTMPReceiver->RTMPPublisher: NewRTMPPublisher()
-RTMPReceiver->RTMPPublisher: Cycle()(新启goroutine执行)
+RTMPServer->RTMPService: NewRTMPService(net.Conn)
+RTMPServer->RTMPService: Prepare()
+RTMPService->RTMPService: Prepare()
+RTMPService->PreHandler: NewPreHandler(conn)
+RTMPService->PreHandler: Handle(conn)
+PreHandler->RTMPSession: HandshakeServer()
+PreHandler->RTMPSession: ReadConnect()
+PreHandler->PreHandler: checkHost()
+RTMPService->PreHandler: IsPublishing()(如果是publish命令)
+RTMPService->RTMPForwarder: NewRTMPForwarder(conn)
+RTMPForwarder->RTMPForwarder: NewRTMPProducer(conn)
+RTMPForwarder->RTMPForwarder: CreateForwarderSource()
+RTMPService->RTMPForwarder: Cycle()
 loop
-    RTMPPublisher->RTMPPublisher: ContextDone(ctx)
+    RTMPForwarder->RTMPForwarder: ContextDone(ctx)
     alt timeout或canceled
-        RTMPPublisher->RTMPPublisher: Stop()
-        destroy RTMPPublisher
+        RTMPForwarder->RTMPForwarder: Stop()
+        RTMPForwarder->RTMPProducer: Close()
+        destroy RTMPProducer
     else 
-        RTMPPublisher->RTMPPublisher: processMsg()
-        RTMPPublisher->RTMPSession: ReadHeaders()
-        RTMPPublisher->GOPCache: PushHeader()
-        RTMPPublisher->RTMPSession: ReadPacket()
-        RTMPPublisher->GOPCache: PushPacket()
-        RTMPPublisher->RTMPPublisher: processCmd()
-        RTMPPublisher->RTMPSession: ReadCommand()
+        RTMPForwarder->RTMPForwarder: processMsg()
+        RTMPForwarder->RTMPProducer: Produce()
+        RTMPProducer->RTMPSession: ReadHeaders()
+        RTMPProducer->Queue: WriteReaders()
+        RTMPProducer->RTMPSession: ReadPacket()
+        RTMPProducer->Queue: WritePacket()
+        RTMPProducer->RTMPSession: ReadCommand()
         alt deleteStream或FCUnpublish
-            RTMPPublisher->RTMPPublisher: Stop()
-            destroy RTMPPublisher
+            RTMPProducer->RTMPProducer: PrintLog()
         end
+    end
+end
+RTMPForwarder->RTMPForwarder: GetForwardSources()
+loop [每个ForwardSource一个gorotine]
+    RTMPForwarder->RTMPForwarder: ContextDone(ctx)
+    alt timeout或canceled
+        RTMPForwarder->RTMPForwarder: Stop()
+        RTMPForwarder->RTMPConsumer: Close()
+        destroy RTMPConsumer
+    else 
+        RTMPForwarder->ForwardSource: GetUrl()
+        RTMPForwarder->RTMPForwarder: NewRTMPConsumer(url)
+        RTMPForwarder->RTMPConsumer: Consume()
+        RTMPConsumer->RTMPSession: HandshakeClient()
+        RTMPConsumer->RTMPSession: ReadConnect()
+        RTMPConsumer->QueueCursor: GetHeaders()
+        RTMPConsumer->RTMPSession: WriteHeaders()
+        RTMPConsumer->QueueCursor: GetPacket()
+        RTMPConsumer->RTMPSession: WritePacket()
     end
 end
 @enduml

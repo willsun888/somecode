@@ -1,0 +1,116 @@
+@startuml class-streamlib
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.CodecData {
+    Type() CodecType
+}
+
+interface av.VideoCodecData {
+    Width() int
+	Height() int
+}
+
+interface av.AudioCodecData {
+    SampleFormat() SampleFormat
+	SampleRate() int
+	ChannelLayout() ChannelLayout
+	PacketDuration([]byte) (time.Duration, error)
+}
+
+interface av.PacketWriter {
+	WritePacket(Packet) error
+}
+
+interface av.PacketReader {
+	ReadPacket() (Packet, error)
+}
+
+interface av.Muxer {
+	WriteHeader([]CodecData) error
+	WriteTrailer() error
+}
+
+interface av.Demuxer {
+	Streams() ([]CodecData, error)
+}
+
+interface av.MuxCloser {
+	Close() error
+}
+
+interface av.DemuxCloser {
+	Close() error
+}
+
+class flv.Demuxer {
+    prober *Prober
+	bufr   *bufio.Reader
+}
+
+class flv.Muxer {
+    bufw    writeFlusher
+	b       []byte
+	streams []av.CodecData
+}
+
+interface flv.writeFlusher {
+}
+interface io.Writer {
+}
+interface http.Flusher {
+}
+
+class flv.Prober {
+    Streams  []av.CodecData
+	CachedPkts []av.Packet
+}
+
+class codec.h264.CodecData {
+    AVCDecoderConfRecordBytes() []byte
+    SPS() []byte
+    PPS() []byte
+}
+class codec.aac.CodecData {}
+
+class HandlerMuxer {
+    WriteHeader(streams []av.CodecData) (err error)
+    WriteTrailer() (err error)
+    Close() error
+}
+
+class HandlerDemuxer {
+    Close() error
+}
+
+av.PacketReader<|--av.Demuxer
+av.PacketWriter<|--av.Muxer
+av.MuxCloser-|>av.Muxer
+av.Demuxer<|-av.DemuxCloser
+av.Muxer<|..flv.Muxer
+av.Demuxer<|..flv.Demuxer
+HandlerMuxer-->av.MuxCloser
+HandlerDemuxer-->av.DemuxCloser
+flv.Demuxer-->flv.Prober
+HandlerMuxer-->flv.Muxer
+HandlerDemuxer-->flv.Demuxer
+av.CodecData<|--av.VideoCodecData
+av.CodecData<|--av.AudioCodecData
+av.VideoCodecData<|--codec.h264.CodecData
+av.AudioCodecData<|--codec.aac.CodecData
+flv.Muxer-->flv.writeFlusher
+flv.writeFlusher-->http.Flusher
+flv.writeFlusher-->io.Writer
+http.Flusher<|..http.ResponseWriter
+av.MuxCloser-[hidden]--> flv.Muxer
+av.DemuxCloser-[hidden]--> flv.Demuxer
+av.MuxCloser-[hidden]-->HandlerMuxer
+av.DemuxCloser-[hidden]-->HandlerDemuxer
+@enduml

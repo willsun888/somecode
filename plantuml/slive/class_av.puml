@@ -1,0 +1,79 @@
+@startuml class-av
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface av.CodecData {
+    Type() CodecType
+}
+
+interface av.VideoCodecData {
+    Width() int
+	Height() int
+}
+
+interface av.AudioCodecData {
+    SampleFormat() SampleFormat
+	SampleRate() int
+	ChannelLayout() ChannelLayout
+	PacketDuration([]byte) (time.Duration, error)
+}
+
+interface av.PacketWriter {
+	WritePacket(Packet) error
+}
+
+interface av.PacketReader {
+	ReadPacket() (Packet, error)
+}
+
+interface av.Muxer {
+	WriteHeader([]CodecData) error
+	WriteTrailer() error
+}
+
+interface av.Demuxer {
+	Streams() ([]CodecData, error)
+}
+
+interface av.MuxCloser {
+	Close() error
+}
+
+interface av.DemuxCloser {
+	Close() error
+}
+
+package codec {
+	package h264 {}
+	package aac {}
+}
+
+class codec.h264.CodecData {
+    AVCDecoderConfRecordBytes() []byte
+    SPS() []byte
+    PPS() []byte
+}
+class codec.aac.CodecData {}
+
+av.Muxer-->av.CodecData
+av.Demuxer-->av.CodecData
+av.PacketReader<|--av.Demuxer
+av.PacketWriter<|--av.Muxer
+av.Muxer <|-- av.MuxCloser
+av.Demuxer <|-- av.DemuxCloser
+
+av.Packet<--av.PacketWriter
+av.Packet<--av.PacketReader
+av.CodecData<|--av.VideoCodecData
+av.CodecData<|--av.AudioCodecData
+av.VideoCodecData<|--codec.h264.CodecData
+av.AudioCodecData<|--codec.aac.CodecData
+
+@enduml

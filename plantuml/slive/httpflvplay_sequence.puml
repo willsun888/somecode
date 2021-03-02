@@ -1,0 +1,70 @@
+@startuml httpflvplay-sequence
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.pum
+
+title <size:20>播放httpflv流流程</size>
+
+actor User
+participant "SLive" as SLive
+participant "HTTPFLVServer" as HTTPFLVServer
+participant "Service" as HTTPFLVServer
+participant "HTTPFLVPlayer" as HTTPFLVlayer
+participant "Consumer" as RTMPConsumer
+participant "Producer" as RTMPProducer
+participant "http.ResponseWriter" as http.ResponseWriter
+participant "QueueCursor" as QueueCursor
+participant "HTTPFLVIngester" as HTTPFLVIngester
+participant "HTTPFLVProducer" as HTTPFLVProducer
+participant "Queue" as Queue
+
+User->SLive: 播放http://host/mountpoint/streamID.flv
+SLive->HTTPFLVServer: ServeHTTP(w http.ResponseWriter, r *http.Request)
+HTTPFLVServer->HTTPFLVServer: checkHost()
+HTTPFLVServer->HTTPFLVServer: existStream()
+HTTPFLVServer->HTTPFLVlayer: NewHTTPFLVlayer(w, r)
+alt [本机不存在该流]
+    HTTPFLVlayer->Queue: CreateQueue()
+else [本机存在该流]
+    HTTPFLVServer->HTTPFLVServer: GetQueueCursor() 
+end
+HTTPFLVlayer->RTMPConsumer: NewRTMPConsume(conn, queueCursor)
+HTTPFLVServer->HTTPFLVlayer: Cycle()
+loop
+    HTTPFLVlayer->HTTPFLVayer: ContextDone(ctx)
+    alt timeout或canceled
+        HTTPFLVlayer->HTTPFLVayer: Stop()
+        RTMPConsumer->RTMPConsumer: Close()
+        destroy RTMPConsumer
+        destroy HTTPFLVlayer
+    else 
+        HTTPFLVlayer->HTTPFLVayer: processMsg()
+        HTTPFLVlayer->RTMPConsumer: Consume()
+        RTMPConsumer->QueueCursor: ReadHeaders()
+        RTMPConsumer->avutil: avHeaderToFLVTag()
+        HTTPFLVlayer->http.ResponseWriter: Write()
+        HTTPFLVlayer->http.ResponseWriter: Flush()
+        RTMPConsumer->QueueCursor: ReadPacket()
+        RTMPConsumer->avutil: avPacketToFLVTag()
+        HTTPFLVlayer->http.ResponseWriter: Write()
+        HTTPFLVlayer->http.ResponseWriter: Flush()
+    end
+end
+alt [本机不存在该流]
+    HTTPFLVServer->StreamStat: GetStreamStat()
+    alt [远端没有存在该流]
+        HTTPFLVServer->http.ResponseWriter: 返回404
+        destroy HTTPFLVServer
+    end
+    HTTPFLVServer->HTTPFLVServer: CreateHTTPUrl()
+    HTTPFLVServer->HTTPFLVIngester: NewHTTPIngester(url)
+    HTTPFLVIngester->HTTPFLVProducer: NewHTTPFLVProducer(url, queue)
+    HTTPFLVServer->HTTPFLVIngester: Cycle()
+    HTTPFLVProducer->avutil: parseData(r.Body())
+    HTTPFLVProducer->avutil: flvTagToAVHeader()
+    HTTPFLVProducer->Queue: WriteHeaders()
+    HTTPFLVProducer->avutil: flvTagToAVPacket()
+    HTTPFLVProducer->Queue: WritePacket()
+end
+
+@enduml

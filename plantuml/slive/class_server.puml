@@ -1,0 +1,50 @@
+@startuml class-server
+
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+!include https://unpkg.com/plantuml-style-c4@latest/class-diagram-helper.puml
+' uncomment the following line and comment the first to use locally
+'!include class-diagram-helper.puml
+
+GREY_ARROW
+
+interface server.Handler {
+    Serve(conn net.Conn)
+}
+
+interface http.Handler  {
+	ServeHTTP(ResponseWriter, *Request)
+}
+
+class server.RTMPServer {
+}
+
+class server.Server {
+    ListenAndServe(ctx context.Context, opts ...ListenServeOption) error
+}
+
+package http {
+}
+
+class server.ListenServeOptions {
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+
+	Address  string
+	Protocol string
+	Handler  Handler
+
+	HTTPHandler http.Handler
+	TLSCertFile string
+	TLSKeyFile  string
+}
+
+server.Handler<--server.Server
+http.Handler<--server.Server
+server.Server-->server.ListenServeOptions
+server.Handler<|..server.RTMPServer
+http.Handler<|..server.HTTPFLVServer
+http.Handler<|..server.AdminServer
+
+@enduml

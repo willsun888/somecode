@@ -1,0 +1,21 @@
+@startuml state-publisher
+!include https://unpkg.com/plantuml-style-c4@latest/core.puml
+' uncomment the following line and comment the first to use locally
+'!include core.puml
+
+GREEN_ARROW
+
+' title Publisher States
+
+[*] -> StatusInit: 接收推流
+StatusInit: Prepare()
+StatusInit -> StatusOK: success
+StatusOK: CopyAV()
+StatusOK -> StatusOK: success
+StatusOK --> StatusError: fail
+StatusError: WaitTimeout()
+StatusError --> StatusError: wait
+StatusError --> StatusDeath: timeout
+StatusDeath --> StatusInit: 重新推流
+
+@enduml

@@ -8,51 +8,96 @@ title <size:20>播放rtmp流流程</size>
 actor User
 participant "SLive" as SLive
 participant "RTMPServer" as RTMPServer
-participant "RTMPReceiver" as RTMPReceiver
-participant "RTMPSession" as RTMPSession
-participant "RTMPJitter" as RTMPJitter
-participant "Queue" as GOPCache
-participant "RTMPPlayer" as RTMPPlayer
+participant "Service" as RTMPService
+participant "Player" as RTMPlayer
+participant "Consumer" as RTMPConsumer
+participant "Producer" as RTMPProducer
+participant "Session" as RTMPSession
+participant "QueueCursor" as QueueCursor
+participant "Ingester" as RTMPIngester
+participant "Queue" as Queue
 
-== RTMPServer启动 ==
-SLive->SLive: GetGlobalConfig()(获取server监听参数)
-SLive->RTMPServer: ListenAndServe("rtmp", "10.10.10.10:1935")
-== 建立rtmp连接 ==
-User->SLive: 推流rtmp://host/mountpoint/streamID
+User->SLive: 播放rtmp://host/mountpoint/streamID
 SLive->RTMPServer: Serve(net.Conn)
-RTMPServer->RTMPReceiver: NewRTMPReceiver(net.Conn)
-RTMPServer->RTMPReceiver: Prepare()
-RTMPReceiver->RTMPSession: HandshakeServer()
-RTMPReceiver->RTMPSession: ReadConnect()
-RTMPReceiver->RTMPSession: IsPlaying()(如果是play命令)
-== 回调rtmp Hook ==
-RTMPSession->RTMPJitter: 回调OnPrepare()
-RTMPJitter->RecordManager: GetSessionLastPts()
-== 播放rtmp流程 ==
-RTMPReceiver->RTMPReceiver: checkHost
-RTMPReceiver->Stream: GetStream(streamID)
-RTMPReceiver->RTMPServer: 成功建立RTMP连接
-RTMPReceiver->RTMPPlayer: NewRTMPPlayer(stream)
-RTMPReceiver->RTMPPlayer: Cycle()(新启goroutine执行)
+RTMPServer->RTMPService: NewRTMPService(net.Conn)
+RTMPServer->RTMPService: Prepare()
+RTMPService->RTMPService: Prepare()
+RTMPService->PreHandler: NewPreHandler(conn)
+RTMPService->PreHandler: Handle(conn)
+PreHandler->RTMPSession: HandshakeServer()
+PreHandler->RTMPSession: ReadConnect()
+PreHandler->PreHandler: checkHost()
+RTMPService->PreHandler: IsPlaying()(如果是Play命令)
+RTMPService->RTMPService: existStream()
+RTMPService->RTMPlayer: NewRTMPlayer(conn)
+alt [本机不存在该流]
+    RTMPlayer->Queue: CreateQueue()
+else [本机存在该流]
+    RTMPService->RTMPService: GetQueueCursor() 
+end
+RTMPlayer->RTMPConsumer: NewRTMPConsume(conn, queueCursor)
+RTMPService->RTMPlayer: Cycle()
 loop
-    RTMPPlayer->RTMPPlayer: ContextDone(ctx)
+    RTMPlayer->RTMPlayer: ContextDone(ctx)
     alt timeout或canceled
-        RTMPPlayer->RTMPPlayer: Stop()
-        destroy RTMPPlayer
+        RTMPlayer->RTMPlayer: Stop()
+        RTMPConsumer->RTMPConsumer: Close()
+        destroy RTMPConsumer
+        destroy RTMPlayer
     else 
-        RTMPPlayer->GOPCache: Headers()
-        RTMPPlayer->RTMPSession: WriteHeaders()
-        RTMPPlayer->GOPCache: ReadPacket()
-        RTMPPlayer->RTMPJitter: Correct(pkt)
-        RTMPPlayer->RTMPSession: WritePacket()
-        RTMPPlayer->RTMPPlayer: processCmd()
-        RTMPPlayer->RTMPSession: ReadCommand()
+        RTMPlayer->RTMPlayer: processMsg()
+        RTMPlayer->RTMPConsumer: Consume()
+        RTMPConsumer->QueueCursor: ReadHeaders()
+        RTMPConsumer->RTMPSession: WriteHeaders()
+        RTMPConsumer->QueueCursor: ReadPacket()
+        RTMPConsumer->RTMPSession: WritePacket()
+        RTMPConsumer->RTMPSession: ReadCommand()
         alt deleteStream
-            RTMPPlayer->RTMPPlayer: Stop()
-            destroy RTMPPlayer
+            RTMPlayer->RTMPlayer: Stop()
+            RTMPConsumer->RTMPConsumer: Close()
+            destroy RTMPConsumer
+            destroy RTMPlayer
         end
     end
 end
-@enduml
+alt [本机不存在该流]
+    RTMPService->StreamStat: GetStreamStat()
+    alt [远端没有存在该流]
+        RTMPService->RTMPService: 返回失败()
+        RTMPService->RTMPlayer: stop()
+        RTMPConsumer->RTMPConsumer: Close()
+        destroy RTMPConsumer
+        destroy RTMPlayer
+    else
+    RTMPService->RTMPService: CreateUrl()
+    RTMPService->RTMPIngester: NewRTMPIngester(url)
+    RTMPService->RTMPIngester: Prepare()
+    RTMPIngester->RTMPProducer: Prepare()
+    RTMPIngester->RTMPProducer: NewRTMPProducer(url, queue)
+    RTMPProducer->RTMPSession: HandshakeClient()
+    RTMPProducer->RTMPSession: ReadConnect()
+    RTMPProducer-->RTMPIngester: Prepare()
+    RTMPIngester-->RTMPService: Prepare()
+    RTMPService->RTMPIngester: Cycle()
+    loop
+        RTMPIngester->RTMPIngester: ContextDone(ctx)
+        alt timeout或canceled
+            RTMPIngester->RTMPIngester: Stop()
+            RTMPIngester->RTMPProducer: Close()
+            destroy RTMPProducer
+        else 
+            RTMPIngester->RTMPIngester: processMsg()
+            RTMPIngester->RTMPProducer: Produce()
+            RTMPProducer->RTMPSession: ReadHeaders()
+            RTMPProducer->Queue: WriteHeaders()
+            RTMPProducer->RTMPSession: ReadPacket()
+            RTMPProducer->Queue: WritePacket()
+            RTMPProducer->RTMPSession: ReadCommand()
+            alt deleteStream或FCUnpublish
+                RTMPProducer->RTMPProducer: PrintLog()
+            end
+        end
+    end
+end
 
 @enduml
